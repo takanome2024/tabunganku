@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum PeriodStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAW
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+
+  fullName     String
+  displayName  String
+
+  username     String   @unique
+  password     String
+
+  role         UserRole @default(USER)
+
+  isActive     Boolean  @default(true)
+
+  transactions Transaction[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Period {
+  id           Int          @id @default(autoincrement())
+  periodCode   String       @unique
+  label        String
+  status       PeriodStatus @default(DRAFT)
+
+  transactions Transaction[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Transaction {
+  id              Int             @id @default(autoincrement())
+
+  periodId        Int
+  userId          Int
+
+  transactionType TransactionType
+  amount          Decimal         @db.Decimal(15,2)
+  remarks         String?         @db.Text
+
+  period          Period          @relation(fields: [periodId], references: [id])
+  user            User            @relation(fields: [userId], references: [id])
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model Setting {
+  id                Int      @id @default(autoincrement())
+
+  telegramBotToken  String?
+  telegramChatId    String?
+
+  currency          String   @default("IDR")
+  timezone          String   @default("Asia/Jakarta")
+
+  updatedAt         DateTime @updatedAt
+}

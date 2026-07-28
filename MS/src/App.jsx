@@ -1,10 +1,10 @@
+import { RouterProvider } from "react-router-dom";
+
+import router from "./routes";
+
 function App() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <button className="btn btn-primary">
-        Hello Tabunganku 🚀
-      </button>
-    </div>
+    <RouterProvider router={router} />
   );
 }
 
