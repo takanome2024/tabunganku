@@ -1,6 +1,8 @@
 import * as transactionService from "../services/transaction.service.js";
 
-export const create = async (req, res) => {
+export const create = async (req, res, next) => {
+    console.log("===== TRANSACTION CONTROLLER =====");
+  console.log(req.body);
   try {
     const result = await transactionService.create(
       req.user.id,
@@ -16,7 +18,7 @@ export const create = async (req, res) => {
 }
 };
 
-export const getAll = async (req, res) => {
+export const getAll = async (req, res, next) => {
   try {
     const result = await transactionService.getAll(req.user.id, req.query);
 
@@ -29,7 +31,7 @@ export const getAll = async (req, res) => {
 }
 };
 
-export const getById = async (req, res) => {
+export const getById = async (req, res, next) => {
   try {
     const result = await transactionService.getById(
       req.params.id,
@@ -45,7 +47,7 @@ export const getById = async (req, res) => {
 }
 };
 
-export const update = async (req, res) => {
+export const update = async (req, res, next) => {
   try {
     const result = await transactionService.update(
       req.params.id,
@@ -64,7 +66,7 @@ export const update = async (req, res) => {
 }
 };
 
-export const remove = async (req, res) => {
+export const remove = async (req, res, next) => {
   try {
     await transactionService.remove(
       req.params.id,

@@ -20,15 +20,17 @@
 //   );
 
 // }
-
+import express from "express";
 import authRoute from "./auth.route.js";
 import userRoute from "./user.route.js";
 import transactionRoute from "./transaction.route.js";
 import dashboardRoute from "./dashboard.route.js";
 
-export default (app) => {
-  app.use("/api/v1/auth", authRoute);
-  app.use("/api/v1/user", userRoute);
-  app.use("/api/v1/transactions", transactionRoute);
-  app.use("/api/v1/dashboard", dashboardRoute);
-};
+const router = express.Router();
+
+router.use("/auth", authRoute);
+router.use("/user", userRoute);
+router.use("/transactions", transactionRoute);
+router.use("/dashboard", dashboardRoute);
+
+export default router;

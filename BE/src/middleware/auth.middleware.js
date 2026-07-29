@@ -2,8 +2,9 @@ import jwt from "jsonwebtoken";
 
 export const authMiddleware = (req, res, next) => {
   try {
-    // ambil token dari header
     const authHeader = req.headers.authorization;
+
+    console.log("Authorization:", authHeader);
 
     if (!authHeader) {
       return res.status(401).json({
@@ -12,28 +13,24 @@ export const authMiddleware = (req, res, next) => {
       });
     }
 
-    // format: Bearer token
     const token = authHeader.split(" ")[1];
 
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Token tidak valid",
-      });
-    }
+    console.log("Token:", token);
 
-    // verify token
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET
     );
 
-    // simpan data user ke request
+    console.log("Decoded:", decoded);
+
     req.user = decoded;
 
     next();
 
-  } catch (error) {
+  } catch (err) {
+    console.error("JWT ERROR:", err);
+
     return res.status(401).json({
       success: false,
       message: "Token expired atau tidak valid",
