@@ -1,26 +1,50 @@
-import Card from "@/components/ui/Card";
-import PageHeader from "@/components/ui/PageHeader";
+import { useEffect, useState } from "react";
+import { getDashboard } from "@/services/dashboard.service";
+import formatCurrency from "@/utils/formatCurrency";
+import SummaryCard from "@/components/SummaryCard";
 
-const Home = () => {
+export default function Home() {
+  const [dashboard, setDashboard] = useState(null);
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  const loadDashboard = async () => {
+    try {
+      const result = await getDashboard();
+
+      setDashboard(result.data);
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (!dashboard) {
+    return <p>Loading...</p>;
+  }
+
   return (
-    <div className="container mx-auto max-w-3xl py-10 px-5">
+    <div>
+      <h1>Dashboard</h1>
+<SummaryCard
+  title="Saldo"
+  value={formatCurrency(dashboard.balance)}
+/>
 
-      <PageHeader
-        title="Family Saving"
-        subtitle="Catat seluruh transaksi tabungan keluarga."
-      />
+<SummaryCard
+  title="Total Deposit"
+  value={formatCurrency(dashboard.totalDeposit)}
+/>
 
-      <Card title="Selamat Datang">
-
-        <p>
-          Sistem ini digunakan untuk mencatat seluruh
-          transaksi tabungan keluarga.
-        </p>
-
-      </Card>
-
+<SummaryCard
+  title="Total Withdraw"
+  value={formatCurrency(dashboard.totalWithdraw)}
+/>
+      <pre>
+        {JSON.stringify(dashboard, null, 2)}
+      </pre>
     </div>
   );
-};
-
-export default Home;
+}

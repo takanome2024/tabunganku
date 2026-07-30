@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { login } from "@/services/auth.service";
 
 export default function LoginPage() {
   const [form, setForm] = useState({
@@ -13,11 +14,30 @@ export default function LoginPage() {
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    console.log(form);
-  };
+  try {
+    const result = await login(form);
+
+    localStorage.setItem(
+      "token",
+      result.data.token
+    );
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(result.data.user)
+    );
+
+    console.log(result);
+
+    window.location.href = "/";
+
+  } catch (err) {
+    console.error(err.response?.data);
+  }
+};
 
   return (
     <div className="min-h-screen flex justify-center items-center">

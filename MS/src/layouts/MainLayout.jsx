@@ -7,7 +7,16 @@ const MainLayout = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+<button
+  onClick={() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
 
+    window.location.href = "/login";
+  }}
+>
+  Logout
+</button>
       <main className="flex-1">
         <Outlet />
       </main>
