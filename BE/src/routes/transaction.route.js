@@ -24,10 +24,7 @@ router.post(
 router.get("/", authMiddleware, getAll);
 router.get("/:id", authMiddleware, getById);
 router.put(
-  "/:id",
-  authMiddleware,
-  validate(updateTransactionSchema),
-  update
+  "/:id", authMiddleware, update
 );
 router.delete("/:id", authMiddleware, remove);
 export default router;

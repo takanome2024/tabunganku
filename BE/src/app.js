@@ -12,6 +12,6 @@ app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
 
-app.use("/api", routes);
+app.use("/api/v1", routes);
 
 export default app;

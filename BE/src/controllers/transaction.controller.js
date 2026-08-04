@@ -1,8 +1,6 @@
 import * as transactionService from "../services/transaction.service.js";
 
 export const create = async (req, res, next) => {
-    console.log("===== TRANSACTION CONTROLLER =====");
-  console.log(req.body);
   try {
     const result = await transactionService.create(
       req.user.id,
@@ -11,25 +9,34 @@ export const create = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
+      message: "Transaction berhasil dibuat.",
       data: result,
     });
+
   } catch (err) {
     next(err);
-}
+  }
 };
+
 
 export const getAll = async (req, res, next) => {
   try {
-    const result = await transactionService.getAll(req.user.id, req.query);
+    const result = await transactionService.getAll(
+      req.user.id,
+      req.query
+    );
 
-    res.json({
+    res.status(200).json({
       success: true,
-      data: result,
+      data: result.data,
+      pagination: result.pagination,
     });
+
   } catch (err) {
     next(err);
-}
+  }
 };
+
 
 export const getById = async (req, res, next) => {
   try {
@@ -38,33 +45,36 @@ export const getById = async (req, res, next) => {
       req.user.id
     );
 
-    res.json({
+    res.status(200).json({
       success: true,
       data: result,
     });
+
   } catch (err) {
     next(err);
-}
+  }
 };
+
 
 export const update = async (req, res, next) => {
   try {
-    const result = await transactionService.update(
+    const result = await transactionService.updateTransaction(
       req.params.id,
       req.user.id,
       req.body
     );
 
-    res.json({
+    res.status(200).json({
       success: true,
-      message: "Transaction berhasil diupdate.",
+      message: "Transaction berhasil diperbarui.",
       data: result,
     });
 
   } catch (err) {
     next(err);
-}
+  }
 };
+
 
 export const remove = async (req, res, next) => {
   try {
@@ -73,12 +83,12 @@ export const remove = async (req, res, next) => {
       req.user.id
     );
 
-    res.json({
+    res.status(200).json({
       success: true,
       message: "Transaction berhasil dihapus.",
     });
 
   } catch (err) {
     next(err);
-}
+  }
 };

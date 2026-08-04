@@ -1,6 +1,35 @@
 import prisma from "../config/prisma.js";
 
+
+const createError = (message, status = 400) => {
+  const err = new Error(message);
+  err.status = status;
+  return err;
+};
+
+
+const validateTransactionPayload = ({
+  periodId,
+  transactionType,
+  amount,
+}) => {
+
+  if (!periodId) {
+    throw createError("Period wajib dipilih.");
+  }
+
+  if (!transactionType) {
+    throw createError("Transaction Type wajib dipilih.");
+  }
+
+  if (Number(amount) <= 0) {
+    throw createError("Nominal harus lebih dari 0.");
+  }
+};
+
+
 export const create = async (userId, body) => {
+
   const {
     periodId,
     transactionType,
@@ -8,37 +37,38 @@ export const create = async (userId, body) => {
     remarks,
   } = body;
 
-  if (!periodId) {
-    throw new Error("Period wajib dipilih.");
-  }
 
-  if (!transactionType) {
-    throw new Error("Transaction Type wajib dipilih.");
-  }
+  validateTransactionPayload({
+    periodId,
+    transactionType,
+    amount,
+  });
 
-  if (Number(amount) <= 0) {
-    throw new Error("Nominal harus lebih dari 0.");
-  }
 
-  // Pastikan period ada
   const period = await prisma.period.findUnique({
     where: {
       id: Number(periodId),
     },
   });
 
+
   if (!period) {
-    throw new Error("Period tidak ditemukan.");
+    throw createError(
+      "Period tidak ditemukan.",
+      404
+    );
   }
 
-  const transaction = await prisma.transaction.create({
+
+  return prisma.transaction.create({
     data: {
       userId,
       periodId: Number(periodId),
       transactionType,
-      amount,
+      amount: Number(amount),
       remarks,
     },
+
     include: {
       period: true,
       user: {
@@ -50,86 +80,161 @@ export const create = async (userId, body) => {
       },
     },
   });
-
-  return transaction;
 };
-export const getAll = async (userId, query) => {
 
-  const page = Number(query.page) || 1;
-  const limit = Number(query.limit) || 10;
 
-  const skip = (page - 1) * limit;
+
+export const getAll = async (
+  userId,
+  query = {}
+) => {
+
+  const {
+    page = 1,
+    limit = 10,
+    periodId,
+    transactionType,
+    search,
+  } = query;
+
+
+  const currentPage = Math.max(
+    Number(page),
+    1
+  );
+
+  const perPage = Math.min(
+    Math.max(Number(limit), 1),
+    100
+  );
+
 
   const where = {
     userId,
   };
 
-  const totalData = await prisma.transaction.count({
-    where,
-  });
 
-  const items = await prisma.transaction.findMany({
-    where,
+  if (periodId) {
+    where.periodId = Number(periodId);
+  }
 
-    include: {
-      period: true,
-      user: {
-        select: {
-          id: true,
-          username: true,
-          displayName: true,
-        },
+
+  if (
+    transactionType &&
+    transactionType !== "ALL"
+  ) {
+    where.transactionType = transactionType;
+  }
+
+
+  if (search) {
+    where.remarks = {
+      contains: search,
+      mode: "insensitive",
+    };
+  }
+
+
+  const skip =
+    (currentPage - 1) * perPage;
+
+
+  const [
+    data,
+    totalData
+  ] = await Promise.all([
+
+    prisma.transaction.findMany({
+      where,
+
+      include: {
+        period: true,
       },
-    },
 
-    orderBy: {
-      createdAt: "desc",
-    },
+      orderBy: {
+        createdAt: "desc",
+      },
 
-    skip,
-    take: limit,
-  });
+      skip,
+      take: perPage,
+    }),
+
+
+    prisma.transaction.count({
+      where,
+    }),
+  ]);
+
+
 
   return {
-    items,
+
+    data,
 
     pagination: {
-      page,
-      limit,
       totalData,
-      totalPage: Math.ceil(totalData / limit),
+      currentPage,
+      limit: perPage,
+      totalPages:
+        Math.ceil(totalData / perPage),
     },
+
   };
 };
 
-export const getById = async (id, userId) => {
-  const transaction = await prisma.transaction.findFirst({
-    where: {
-      id: Number(id),
-      userId,
-    },
-    include: {
-      period: true,
-      user: {
-        select: {
-          id: true,
-          username: true,
-          displayName: true,
+
+
+
+export const getById = async (
+  id,
+  userId
+) => {
+
+  const transaction =
+    await prisma.transaction.findFirst({
+
+      where: {
+        id: Number(id),
+        userId,
+      },
+
+
+      include: {
+        period: true,
+        user: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+          },
         },
       },
-    },
-  });
+
+    });
+
 
   if (!transaction) {
-    const err = new Error("Transaction tidak ditemukan.");
-err.status = 404;
-throw err;
+    throw createError(
+      "Transaction tidak ditemukan.",
+      404
+    );
   }
+
 
   return transaction;
 };
 
-export const update = async (id, userId, body) => {
+
+
+
+
+export const updateTransaction = async (
+  id,
+  userId,
+  body
+) => {
+
+
   const {
     periodId,
     transactionType,
@@ -137,39 +242,73 @@ export const update = async (id, userId, body) => {
     remarks,
   } = body;
 
-  const transaction = await prisma.transaction.findFirst({
-    where: {
-      id: Number(id),
-      userId,
-    },
-  });
+
+
+  const transaction =
+    await prisma.transaction.findFirst({
+
+      where: {
+        id: Number(id),
+        userId,
+      },
+
+    });
+
+
 
   if (!transaction) {
-    throw new Error("Transaction tidak ditemukan.");
+    throw createError(
+      "Transaction tidak ditemukan.",
+      404
+    );
   }
 
-  const period = await prisma.period.findUnique({
-    where: {
-      id: Number(periodId),
-    },
+
+
+  validateTransactionPayload({
+    periodId,
+    transactionType,
+    amount,
   });
 
+
+
+  const period =
+    await prisma.period.findUnique({
+
+      where: {
+        id: Number(periodId),
+      },
+
+    });
+
+
+
   if (!period) {
-    const err = new Error("Period tidak ditemukan.");
-err.status = 404;
-throw err;
+    throw createError(
+      "Period tidak ditemukan.",
+      404
+    );
   }
 
-  const updated = await prisma.transaction.update({
+
+
+
+  return prisma.transaction.update({
+
     where: {
       id: Number(id),
     },
+
+
     data: {
       periodId: Number(periodId),
       transactionType,
-      amount,
+      amount: Number(amount),
       remarks,
     },
+
+
     include: {
       period: true,
       user: {
@@ -180,29 +319,51 @@ throw err;
         },
       },
     },
+
   });
 
-  return updated;
 };
 
-export const remove = async (id, userId) => {
 
-  const transaction = await prisma.transaction.findFirst({
-    where: {
-      id: Number(id),
-      userId,
-    },
-  });
+
+
+
+export const remove = async (
+  id,
+  userId
+) => {
+
+
+  const transaction =
+    await prisma.transaction.findFirst({
+
+      where: {
+        id: Number(id),
+        userId,
+      },
+
+    });
+
+
 
   if (!transaction) {
-    throw new Error("Transaction tidak ditemukan.");
+    throw createError(
+      "Transaction tidak ditemukan.",
+      404
+    );
   }
 
+
+
   await prisma.transaction.delete({
+
     where: {
       id: Number(id),
     },
+
   });
+
+
 
   return true;
 };

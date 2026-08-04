@@ -25,6 +25,7 @@ import authRoute from "./auth.route.js";
 import userRoute from "./user.route.js";
 import transactionRoute from "./transaction.route.js";
 import dashboardRoute from "./dashboard.route.js";
+import periodRoute from "./period.route.js";
 
 const router = express.Router();
 
@@ -32,5 +33,6 @@ router.use("/auth", authRoute);
 router.use("/user", userRoute);
 router.use("/transactions", transactionRoute);
 router.use("/dashboard", dashboardRoute);
+router.use("/periods", periodRoute);
 
 export default router;
